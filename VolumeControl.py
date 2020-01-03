@@ -277,6 +277,7 @@ def freeSpin(setting):
         print ("Free Spin OFF")
         obj2.stop()
         obj2.register(pressed=buttonPushed2, onchange=valueChanged2)
+        obj2.register(increment=cwTurn2, decrement=ccwTurn2)
         obj.start()
         obj3.start()
         time.sleep(.5)
@@ -288,7 +289,8 @@ def freeSpin(setting):
         obj2.stop()
         obj3.stop()
         obj2.register(pressed=buttonPushedOFF, onchange=valueChanged2)
-        time.sleep(3)
+        obj2.register(increment=cwTurn, decrement=ccwTurn)
+        time.sleep(.5)
         obj2.start()  
         
 def startUp():
