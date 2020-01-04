@@ -9,10 +9,10 @@ import os
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 
-GPIO.setup(26, GPIO.OUT, initial = GPIO.LOW) #Blue
+GPIO.setup(19, GPIO.OUT, initial = GPIO.LOW) #Blue
 GPIO.setup(13, GPIO.OUT) #Green
 GPIO.setup(12, GPIO.OUT) #Red
-GPIO.setup(7, GPIO.OUT, initial = GPIO.HIGH)
+
 greenLED = GPIO.PWM(13, 100) #pin and freq
 greenLED.ChangeDutyCycle(0) 
 greenLED.start(50) #duty cycle
@@ -21,9 +21,7 @@ redLED.start(15)
 
 # Initalized Variables
 favorites = {}
-freeSpin = 0
-count3 = 0
-
+#time.sleep(10) #wait for pi to boot
 # Discovering zones using soco and picking zone we want
 for item in soco.discover():
     if item.uid == "RINCON_7828CA12D8C601400":
@@ -79,15 +77,16 @@ def buttonPushed2():
     else:
         if zone.loudness == 1:
             zone.loudness = 0
-            GPIO.output(26, GPIO.LOW)
+            GPIO.output(19, GPIO.LOW)
         else:
             zone.loudness = 1
-            GPIO.output(26, GPIO.HIGH)
+            GPIO.output(19, GPIO.HIGH)
             
         print ("Bass Button Pushed, Loudness Setting = ", zone.loudness)
         
 def buttonPushedOFF():
     freeSpin(0)
+    
     
 def valueChanged2(count2):
     pass #unused Library Funciton
@@ -128,10 +127,10 @@ def checkVolume(): #Checks volume to trigger LED on warnings
         
     if zone.volume <= 30:
         zone.loudness = 1
-        GPIO.output(26, GPIO.HIGH)
+        GPIO.output(19, GPIO.HIGH)
     if zone.volume > 30:
         zone.loudness = 0
-        GPIO.output(26, GPIO.LOW)
+        GPIO.output(19, GPIO.LOW)
     
     if zone.volume == 0:
         greenLED.ChangeFrequency(15)
@@ -147,40 +146,40 @@ def updateUI(knob):
 def checkBass():
     if zone.loudness == 1:
         if zone.bass >= 0:
-            GPIO.output(26, GPIO.LOW)
+            GPIO.output(19, GPIO.LOW)
             time.sleep(.1)
-            GPIO.output(26, GPIO.HIGH)
+            GPIO.output(19, GPIO.HIGH)
             
         if zone.bass < 0:
-            GPIO.output(26, GPIO.LOW)
+            GPIO.output(19, GPIO.LOW)
             time.sleep(.3)
-            GPIO.output(26, GPIO.HIGH)
+            GPIO.output(19, GPIO.HIGH)
             
         if zone.bass == 10 or zone.bass == 0:
-            GPIO.output(26, GPIO.LOW)
+            GPIO.output(19, GPIO.LOW)
             time.sleep(.1)
-            GPIO.output(26, GPIO.HIGH)
+            GPIO.output(19, GPIO.HIGH)
             
     if zone.loudness == 0:
         if zone.bass >= 0:
-            GPIO.output(26, GPIO.HIGH)
+            GPIO.output(19, GPIO.HIGH)
             time.sleep(.1)
-            GPIO.output(26, GPIO.LOW)
+            GPIO.output(19, GPIO.LOW)
             
         if zone.bass < 0:
-            GPIO.output(26, GPIO.HIGH)
+            GPIO.output(19, GPIO.HIGH)
             time.sleep(.3)
-            GPIO.output(26, GPIO.LOW)
+            GPIO.output(19, GPIO.LOW)
             
         if zone.bass == 10 or zone.bass == 0:
-            GPIO.output(26, GPIO.HIGH)
+            GPIO.output(19, GPIO.HIGH)
             time.sleep(.2)
-            GPIO.output(26, GPIO.LOW)
+            GPIO.output(19, GPIO.LOW)
         
     if zone.loudness == 1:
-        GPIO.output(26, GPIO.HIGH)
+        GPIO.output(19, GPIO.HIGH)
     else:
-        GPIO.output(26, GPIO.LOW)
+        GPIO.output(19, GPIO.LOW)
         
 def monitorSongs(currSong, prevSong):
     if prevSong != currSong:
@@ -214,11 +213,11 @@ def flashLEDs(numFlash):
     for x in range(0,numFlash):
         redLED.ChangeDutyCycle(100)
         greenLED.ChangeDutyCycle(100)
-        GPIO.output(26,GPIO.HIGH)
+        GPIO.output(19,GPIO.HIGH)
         time.sleep(.2)
         redLED.ChangeDutyCycle(0)
         greenLED.ChangeDutyCycle(0)
-        GPIO.output(26,GPIO.LOW)
+        GPIO.output(19,GPIO.LOW)
         time.sleep(.1)
         greenLED.ChangeDutyCycle(50)
     checkVolume()
@@ -273,16 +272,7 @@ def storeFavorite():
     print ("Favorites at end of store function: ", favorites)
     
 def freeSpin(setting):
-    if setting == 0:
-        print ("Free Spin OFF")
-        obj2.stop()
-        obj2.register(pressed=buttonPushed2, onchange=valueChanged2)
-        obj2.register(increment=cwTurn2, decrement=ccwTurn2)
-        obj.start()
-        obj3.start()
-        time.sleep(.5)
-        obj2.start()
-        
+    
     if setting == 1:
         print ("Free Spin ON")
         obj.stop()
@@ -291,18 +281,28 @@ def freeSpin(setting):
         obj2.register(pressed=buttonPushedOFF, onchange=valueChanged2)
         obj2.register(increment=cwTurn, decrement=ccwTurn)
         time.sleep(.5)
-        obj2.start()  
+        obj2.start()
         
+    if setting == 0:
+        print ("Free Spin OFF")
+        obj2.stop()
+        obj2.register(pressed=buttonPushed2, onchange=valueChanged2)
+        obj2.register(increment=cwTurn2, decrement=ccwTurn2)
+        obj.start()
+        obj3.start()
+        time.sleep(.5)
+        obj2.start()              
+
 def startUp():
     print("start up")
     loadFavorites(favorites)
     redLED.ChangeDutyCycle(100)
     greenLED.ChangeFrequency(100)
-    GPIO.output(26,GPIO.HIGH)
+    GPIO.output(19,GPIO.HIGH)
     time.sleep(1)
     redLED.ChangeDutyCycle(0)
     greenLED.ChangeDutyCycle(0)
-    GPIO.output(26,GPIO.LOW)
+    GPIO.output(19,GPIO.LOW)
     time.sleep(1)
     greenLED.ChangeDutyCycle(50)
     checkVolume()
@@ -321,7 +321,7 @@ obj2.register(pressed=buttonPushed2, onchange=valueChanged2)
 obj2.start()
 
 # Knob 3
-obj3 = rotary.Rotary(22,27,17)
+obj3 = rotary.Rotary(22,27,17,2)
 obj3.register(increment=cwTurn3, decrement=ccwTurn3)
 obj3.register(pressed=buttonPushed3, onchange=valueChanged3)
 GPIO.setup(4, GPIO.OUT, initial = GPIO.HIGH)
@@ -348,11 +348,8 @@ except KeyboardInterrupt:
     obj2.stop()
     greenLED.stop()
     redLED.stop()
-    GPIO.output(26, GPIO.LOW)
+    GPIO.output(19, GPIO.LOW)
     GPIO.cleanup()
-    
-except:
-    print ("other error")
     
 finally:
     GPIO.cleanup()
