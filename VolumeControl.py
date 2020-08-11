@@ -21,12 +21,16 @@ redLED.start(15)
 
 # Initalized Variables
 favorites = {}
+favTrigger = 0
 #time.sleep(10) #wait for pi to boot
 # Discovering zones using soco and picking zone we want
 for item in soco.discover():
     if item.uid == "RINCON_7828CA12D8C601400":
         zone = item
         redLED.ChangeDutyCycle(0)
+        prevVol = zone.volume
+        prevBass = zone.bass
+        prevTreble = zone.treble
         print ("Found ", zone.player_name)
         break
 
@@ -180,18 +184,32 @@ def checkBass():
         GPIO.output(19, GPIO.HIGH)
     else:
         GPIO.output(19, GPIO.LOW)
-        
+   
 def monitorSongs(currSong, prevSong):
     if prevSong != currSong:
+        global favTrigger, prevVol, prevBass, prevTreble
+        print(favTrigger)
+        if favTrigger == 1:
+            zone.volume = prevVol
+            zone.bass = prevBass
+            zone.treble = prevTreble
+            favTrigger = 0
+            print (prevVol,prevBass,prevTreble,favTrigger)
         if currSong in favorites:
+            favTrigger = 1
+            prevVol = zone.volume
+            prevBass = zone.bass
+            prevTreble = zone.treble
+            time.sleep(.5)
             threading.Thread(target = flashLEDs, args = (5, )).start()
             zone.ramp_to_volume(favorites[currSong][0], 'AUTOPLAY_RAMP_TYPE')
             zone.bass = favorites[currSong][1]
             zone.treble = favorites[currSong][2]
             zone.loudness = favorites[currSong][3]
+            print (prevVol,prevBass,prevTreble,favTrigger)
             print ("Found this song in favorites, setting new levels...")
             print ("    Song = ", currSong, " Vol = ", favorites[currSong][0], " Bass = ", favorites[currSong][1])
-        
+      
         
 def loadFavorites(favorites):
     open('SonosFavorites.txt', 'a+')
